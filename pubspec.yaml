@@ -48,6 +48,10 @@ dependencies:
   cached_network_image: ^3.4.1
   fluttertoast: ^8.2.12
   flutter_svg: ^2.0.17
+  device_info_plus: ^12.2.0
+  flutter_image_compress: ^2.4.0
+  image_picker: ^1.2.0
+  permission_handler: ^12.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:list_crud/src/model/inser_user/insert_user_request.dart';
 import 'package:list_crud/src/model/inser_user/insert_user_response.dart';
@@ -9,161 +7,103 @@ import 'package:list_crud/src/model/update_user/update_user_response.dart';
 import 'package:list_crud/src/model/user_details/user_details_response.dart';
 import 'package:list_crud/src/model/user_list_response/user_list_response.dart';
 import 'package:list_crud/src/utils/data/object_factory.dart';
+import 'package:list_crud/src/utils/widgets/DioErrorHandler.dart';
 
 class UserProvider {
-  /// List
-  Future<StateModel?> userListProvider(int page, int perPage) async {
+  /// 🧾 User List
+  Future<StateModel<List<UserListResponse>>?> userListProvider(
+      int page, int perPage) async {
     try {
-      final response = await ObjectFactory().apiClient.listUser(page, perPage);
-      print(" response: ${response.data}");
+      final response =
+      await ObjectFactory().apiClient.listUser(page, perPage);
 
       if (response.statusCode == 200) {
-        if (response.data is List) {
-          return StateModel<List<UserListResponse>>.success(
-            (response.data as List)
-                .map((e) => UserListResponse.fromJson(e))
-                .toList(),
-          );
-        }
+        final List<dynamic> data = response.data is List
+            ? response.data
+            : (response.data as Map<String, dynamic>)['data'] ?? [];
 
-        final decoded = jsonDecode(response.data);
-        if (decoded is List) {
-          return StateModel<List<UserListResponse>>.success(
-            decoded.map((e) => UserListResponse.fromJson(e)).toList(),
-          );
-        }
+        final users =
+        data.map((e) => UserListResponse.fromJson(e)).toList();
+
+        return StateModel.success(users);
+      } else {
+        return StateModel.error(
+            "Unexpected response: ${response.statusCode}");
       }
-
-      return null;
     } on DioException catch (e) {
-      if (e.response != null && e.response!.statusCode == 500) {
-        return StateModel.error(
-            "The server isn't responding! Please try again later.");
-      } else if (e.response != null && e.response!.statusCode == 408) {
-        return StateModel.error(
-            "Request timed out. Please try again later.");
-      } else if (e.type == DioExceptionType.connectionError) {
-        return StateModel.error(
-            "Connection error. Please check your network and try again.");
-      }
+      return DioErrorHandler.handle<List<UserListResponse>>(e);
     }
-    return null;
   }
 
-  /// INSERT USER
-  Future<StateModel?> insertUserProvider(InsertUserRequest insertUserRequest) async {
+  /// ➕ Insert User
+  Future<StateModel<InsertUserResponse>?> insertUserProvider(
+      InsertUserRequest insertUserRequest) async {
     try {
-      final response = await ObjectFactory().apiClient.insertUserClient(insertUserRequest);
-      print(response.toString());
+      final response = await ObjectFactory()
+          .apiClient
+          .insertUserClient(insertUserRequest);
+
       if (response.statusCode == 201) {
-        return StateModel<InsertUserResponse>.success(
+        return StateModel.success(
             InsertUserResponse.fromJson(response.data));
       } else {
-        return null;
+        return StateModel.error(
+            "Unexpected response: ${response.statusCode}");
       }
     } on DioException catch (e) {
-      if (e.response != null && e.response!.statusCode == 500) {
-        return StateModel.error(
-            "The server isn't responding! Please try again later.");
-      } else if (e.response != null && e.response!.statusCode == 422) {
-        return StateModel.error(
-            "Unprocessable Entity!,Try again");
-      } else if (e.response != null && e.type == DioExceptionType.connectionError) {
-        return StateModel.error(
-            "Connection refused. This indicates an error which most likely cannot be solved by the library. Please try again later or reach out to our support team for assistance. Thank you for your patience!");
-      }
+      return DioErrorHandler.handle<InsertUserResponse>(e);
     }
-    return null;
   }
 
-
-  /// Update
-  Future<StateModel?> updateUserProvider(int id,UpdateUserRequest updateUserRequest) async {
+  /// ✏️ Update User
+  Future<StateModel<UpdateUserResponse>?> updateUserProvider(
+      int id, UpdateUserRequest updateUserRequest) async {
     try {
-      final response = await ObjectFactory().apiClient.updateUserClient(id,updateUserRequest);
-      print(response.toString());
+      final response = await ObjectFactory().apiClient.updateUserClient(id, updateUserRequest);
+
       if (response.statusCode == 200) {
-        return StateModel<UpdateUserResponse>.success(
+        return StateModel.success(
             UpdateUserResponse.fromJson(response.data));
+      } else {
+        return StateModel.error(
+            "Unexpected response: ${response.statusCode}");
       }
-      return null;
     } on DioException catch (e) {
-      if (e.response != null && e.response!.statusCode == 500) {
-        return StateModel.error(
-            "The server isn't responding! Please try again later.");
-      } else if (e.response != null && e.response!.statusCode == 408) {
-        return StateModel.error(
-            "Request timed out. Please try again later.");
-      } else if (e.type == DioExceptionType.connectionError) {
-        return StateModel.error(
-            "Connection error. Please check your network and try again.");
-      }
+      return DioErrorHandler.handle<UpdateUserResponse>(e);
     }
-    return null;
   }
 
-
-  /// Details
-  Future<StateModel?> userDetailsProvider(int id) async {
+  /// 👤 User Details
+  Future<StateModel<UserDetailsResponse>?> userDetailsProvider(
+      int id) async {
     try {
       final response = await ObjectFactory().apiClient.userDetailsClient(id);
-      print(" response: ${response.data}");
 
       if (response.statusCode == 200) {
-        final data = response.data;
-
-        if (data is List) {
-          return StateModel<List<UserDetailsResponse>>.success(
-            data.map((e) => UserDetailsResponse.fromJson(e)).toList(),
-          );
-        } else if (data is Map<String, dynamic>) {
-          return StateModel<UserDetailsResponse>.success(
-            UserDetailsResponse.fromJson(data),
-          );
-        }
+        return StateModel.success(
+            UserDetailsResponse.fromJson(response.data));
+      } else {
+        return StateModel.error(
+            "Unexpected response: ${response.statusCode}");
       }
-
-      return null;
     } on DioException catch (e) {
-      if (e.response != null && e.response!.statusCode == 500) {
-        return StateModel.error(
-            "The server isn't responding! Please try again later.");
-      } else if (e.response != null && e.response!.statusCode == 404) {
-        return StateModel.error("Resource not found.");
-      } else if (e.type == DioExceptionType.connectionError) {
-        return StateModel.error(
-            "Connection error. Please check your network and try again.");
-      }
+      return DioErrorHandler.handle<UserDetailsResponse>(e);
     }
-
-    return null;
   }
 
-
-  /// Delete
-  Future<StateModel?> deleteUserProvider(int id) async {
+  /// ❌ Delete User
+  Future<StateModel<String>?> deleteUserProvider(int id) async {
     try {
       final response = await ObjectFactory().apiClient.deleteUserClient(id);
-      print(response.toString());
+
       if (response.statusCode == 204) {
-        return StateModel<String>.success("User deleted successfully");
+        return StateModel.success("User deleted successfully");
+      } else {
+        return StateModel.error(
+            "Unexpected response: ${response.statusCode}");
       }
-      return null;
     } on DioException catch (e) {
-      if (e.response != null && e.response!.statusCode == 500) {
-        return StateModel.error(
-            "The server isn't responding! Please try again later.");
-      } else if (e.response != null && e.response!.statusCode == 404) {
-        return StateModel.error(
-            "Resource not found.");
-      } else if (e.type == DioExceptionType.connectionError) {
-        return StateModel.error(
-            "Connection error. Please check your network and try again.");
-      }
+      return DioErrorHandler.handle<String>(e);
     }
-    return null;
   }
-
 }
-
-

@@ -1,25 +1,22 @@
-
-///Common class to transfer data
-class StateModel<T> {
-  StateModel._();
+/// Common class to transfer data
+abstract class StateModel<T> {
+  const StateModel();
 
   factory StateModel.success(T value) = SuccessState<T>;
 
-  factory StateModel.error(T msg) = ErrorState<T>;
+  factory StateModel.error(String message) = ErrorState<T>;
 }
 
-/// transfer data with errors
-class ErrorState<T> extends StateModel<T> {
-  ///contain error message
-  ErrorState(this.msg) : super._();
-  ///message
-  final T msg;
-}
-
-/// transfer success data object
+/// Transfer success data object
 class SuccessState<T> extends StateModel<T> {
-  ///contain data object
-  SuccessState(this.value) : super._();
-  /// value
   final T value;
+
+  const SuccessState(this.value) : super();
+}
+
+/// Transfer error message
+class ErrorState<T> extends StateModel<T> {
+  final String msg;
+
+  const ErrorState(this.msg) : super();
 }

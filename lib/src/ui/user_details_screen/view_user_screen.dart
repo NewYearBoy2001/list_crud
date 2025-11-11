@@ -8,6 +8,7 @@ import 'package:list_crud/src/bloc/user_bloc.dart';
 import 'package:list_crud/src/constants/colors.dart';
 import 'package:list_crud/src/ui/user_arguments.dart';
 import 'package:list_crud/src/utils/network_connectivity/bloc/network_bloc.dart';
+import 'package:list_crud/src/utils/widgets/NetworkAwareWidget.dart';
 import 'package:list_crud/src/utils/widgets/button_widget.dart';
 import 'package:list_crud/src/utils/widgets/customeHeader.dart';
 import 'package:lottie/lottie.dart';
@@ -35,11 +36,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<NetworkBloc, NetworkState>(
-  builder: (context, state) {
-    if (state is NetworkSuccess) {
-      networkSuccess = true;
-      return BlocConsumer<UserBloc, UserState>(
+    return NetworkAwareWidget(
+      child: BlocConsumer<UserBloc, UserState>(
         listener: (context, state) {
           if (state is UserLoadingError) {
             Fluttertoast.showToast(
@@ -180,28 +178,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
 
           return const SizedBox();
         },
-      );
-    }
-    else if (state is NetworkFailure || state is NetworkInitial) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Lottie.asset(Assets.NO_INTERNET),
-            Text(
-              "You are not connected to the internet",
-              style: GoogleFonts.openSans(
-                color: AppColors.primaryBlueColor,
-                fontSize: 20,
-              ),
-            ).animate().scale(delay: 200.ms, duration: 300.ms),
-          ],
-        ),
-      );
-    }
-    return const SizedBox();
-  },
-);
+      ),
+    );
   }
 
 

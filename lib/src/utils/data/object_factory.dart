@@ -1,4 +1,3 @@
-
 import 'package:list_crud/src/utils/data/prefs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,15 +12,15 @@ class ObjectFactory {
 
   factory ObjectFactory() => _objectFactory;
 
-  ///Initialisation of Objects
   final Prefs _prefs = Prefs();
   final ApiClient _apiClient = ApiClient();
 
-
-  /// Getters of Objects
+  Future<void> initPrefs() async {
+    SharedPreferences sharedPrefs = await SharedPreferences.getInstance();
+    _prefs.sharedPreferences = sharedPrefs;
+  }
 
   ApiClient get apiClient => _apiClient;
-
   Prefs get prefs => _prefs;
-
 }
+

@@ -4,12 +4,14 @@ import 'package:list_crud/src/ui/user_arguments.dart';
 import 'package:list_crud/src/ui/edit_user/edit_user_screen.dart';
 import 'package:list_crud/src/ui/home/home_screen.dart';
 import 'package:list_crud/src/ui/user_details_screen/view_user_screen.dart';
+import 'package:list_crud/src/utils/navigation_services.dart';
 
 import '../src/ui/splash/splash_screen.dart';
 
 class AppRouter {
 
   static final GoRouter _router = GoRouter(
+    navigatorKey: navigatorKey,
     routes: <GoRoute>[
       GoRoute(
         routes: <GoRoute>[

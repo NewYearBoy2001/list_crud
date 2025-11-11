@@ -11,6 +11,7 @@ import 'package:list_crud/src/constants/colors.dart';
 import 'package:list_crud/src/model/user_list_response/user_list_response.dart';
 import 'package:list_crud/src/ui/user_arguments.dart';
 import 'package:list_crud/src/utils/network_connectivity/bloc/network_bloc.dart';
+import 'package:list_crud/src/utils/widgets/NetworkAwareWidget.dart';
 import 'package:list_crud/src/utils/widgets/customeHeader.dart';
 import 'package:lottie/lottie.dart';
 
@@ -56,13 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primaryWhiteColor,
-      body: BlocBuilder<NetworkBloc, NetworkState>(
-        builder: (context, state) {
-      if (state is NetworkSuccess) {
-        networkSuccess = true;
-        return BlocConsumer<UserBloc, UserState>(
+    return NetworkAwareWidget(
+      child: Scaffold(
+        backgroundColor: AppColors.primaryWhiteColor,
+        body: BlocConsumer<UserBloc, UserState>(
           listener: (context, state) {
             if (state is UserLoaded) {
               final newUsers = state.userListResponse;
@@ -321,53 +319,34 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             );
           },
-        );
-      }else if (state is NetworkFailure || state is NetworkInitial) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Lottie.asset(Assets.NO_INTERNET),
-              Text(
-                "You are not connected to the internet",
-                style: GoogleFonts.openSans(
-                  color: AppColors.primaryBlueColor,
-                  fontSize: 20,
-                ),
-              ).animate().scale(delay: 200.ms, duration: 300.ms),
-            ],
-          ),
-        );
-      }
-      return const SizedBox();
-      },
-      ),
-      floatingActionButtonLocation: networkSuccess ? FloatingActionButtonLocation.endFloat : null,
-      floatingActionButton: networkSuccess
-          ? Padding(
-        padding: const EdgeInsets.only(right: 16.0, bottom: 16),
-        child: FloatingActionButton(
-          onPressed: () {
-            context.push(
-              '/edit_screen',
-              extra: UserArguments(
-                id: 0,
-                name: "",
-                email: "",
-                gender: "",
-                status: "",
-                isEditMode: false,
-              ),
-            );
-          },
-          backgroundColor: AppColors.primaryBlueColor,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, size: 28, color: Colors.white),
         ),
-      )
-          : null,
+        floatingActionButtonLocation: networkSuccess ? FloatingActionButtonLocation.endFloat : null,
+        floatingActionButton: networkSuccess
+            ? Padding(
+          padding: const EdgeInsets.only(right: 16.0, bottom: 16),
+          child: FloatingActionButton(
+            onPressed: () {
+              context.push(
+                '/edit_screen',
+                extra: UserArguments(
+                  id: 0,
+                  name: "",
+                  email: "",
+                  gender: "",
+                  status: "",
+                  isEditMode: false,
+                ),
+              );
+            },
+            backgroundColor: AppColors.primaryBlueColor,
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add, size: 28, color: Colors.white),
+          ),
+        )
+            : null,
 
 
+      ),
     );
   }
 

@@ -11,6 +11,7 @@ import 'package:list_crud/src/model/inser_user/insert_user_request.dart';
 import 'package:list_crud/src/model/update_user/update_user_request.dart';
 import 'package:list_crud/src/ui/user_arguments.dart';
 import 'package:list_crud/src/utils/network_connectivity/bloc/network_bloc.dart';
+import 'package:list_crud/src/utils/widgets/NetworkAwareWidget.dart';
 import 'package:list_crud/src/utils/widgets/button_widget.dart';
 import 'package:list_crud/src/utils/widgets/customeHeader.dart';
 import 'package:lottie/lottie.dart';
@@ -84,188 +85,165 @@ class _EditUserScreenState extends State<EditUserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: true,
-      onPopInvoked: (didPop) {
-        context.go('/homeScreen');
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.primaryWhiteColor,
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          child: BlocBuilder<NetworkBloc, NetworkState>(
-            builder: (context, state) {
-              if (state is NetworkSuccess) {
-                networkSuccess = true;
-                return BlocBuilder<UserBloc, UserState>(
-        builder: (context, state) {
-          if (state is InsertUserLoading || state is UpdateUserLoading) {
-            return Center(
-              child: RefreshProgressIndicator(
-                color: AppColors.primaryWhiteColor,
-                backgroundColor: AppColors.primaryBlueColor,
-              ),
-            );
-          }
-          return PrimaryButton(
-            text: isEditMode ? "Update Details" : "Insert User",
-            onPressed: () {
-              final name = nameController.text.trim();
-              final email = emailController.text.trim();
-
-              if (!_isFormValid() && !isEditMode) {
-                String errorMsg = "Please fill out all fields";
-                if (email.isEmpty) {
-                  errorMsg = "Email is required";
+    return NetworkAwareWidget(
+      child: PopScope(
+        canPop: true,
+        onPopInvoked: (didPop) {
+          context.go('/homeScreen');
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.primaryWhiteColor,
+          bottomNavigationBar: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+            child: BlocBuilder<UserBloc, UserState>(
+              builder: (context, state) {
+                if (state is InsertUserLoading || state is UpdateUserLoading) {
+                  return Center(
+                    child: RefreshProgressIndicator(
+                      color: AppColors.primaryWhiteColor,
+                      backgroundColor: AppColors.primaryBlueColor,
+                    ),
+                  );
                 }
-                else if (!_isValidEmail(email) && !isEditMode) {
-                  errorMsg = "Please enter a valid email address";
-                }
+                return PrimaryButton(
+                  text: isEditMode ? "Update Details" : "Insert User",
+                  onPressed: () {
+                    final name = nameController.text.trim();
+                    final email = emailController.text.trim();
 
+                    if (!_isFormValid() && !isEditMode) {
+                      String errorMsg = "Please fill out all fields";
+                      if (email.isEmpty) {
+                        errorMsg = "Email is required";
+                      }
+                      else if (!_isValidEmail(email) && !isEditMode) {
+                        errorMsg = "Please enter a valid email address";
+                      }
+
+                      Fluttertoast.showToast(
+                        msg: errorMsg,
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: AppColors.primaryWhiteColor,
+                        textColor: AppColors.primaryRedColor,
+                      );
+                      return;
+                    }
+
+                    final gender = selectedGender!;
+                    final status = selectedStatus!;
+
+                    widget.editUserArguments.name = name;
+                    widget.editUserArguments.email = email;
+                    widget.editUserArguments.gender = gender;
+                    widget.editUserArguments.status = status;
+
+                    if (isEditMode) {
+                      final currentUser = UpdateUserRequest(
+                        name: name,
+                        email: email,
+                        gender: gender,
+                        status: status,
+                      );
+                      context.read<UserBloc>().add(UpdateUserEvent(updateUserRequest: currentUser, id: widget.editUserArguments.id!.toInt()));
+                    } else {
+                      final newUser = InsertUserRequest(
+                        name: name,
+                        email: email,
+                        gender: gender,
+                        status: status,
+                      );
+                      context.read<UserBloc>().add(
+                        InsertUserEvent(insertUserRequest: newUser),
+                      );
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+          body: BlocConsumer<UserBloc, UserState>(
+            listener: (context, state) {
+              if (state is InsertUserLoaded) {
                 Fluttertoast.showToast(
-                  msg: errorMsg,
+                  msg: "Inserted successfully",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: AppColors.primaryWhiteColor,
+                  textColor: AppColors.primaryBlueColor,
+                );
+              }
+              if (state is InsertUserLoadingError) {
+                Fluttertoast.showToast(
+                  msg: state.errorMsg,
                   toastLength: Toast.LENGTH_SHORT,
                   gravity: ToastGravity.BOTTOM,
                   backgroundColor: AppColors.primaryWhiteColor,
                   textColor: AppColors.primaryRedColor,
                 );
-                return;
               }
 
-              final gender = selectedGender!;
-              final status = selectedStatus!;
-
-              widget.editUserArguments.name = name;
-              widget.editUserArguments.email = email;
-              widget.editUserArguments.gender = gender;
-              widget.editUserArguments.status = status;
-
-              if (isEditMode) {
-                final currentUser = UpdateUserRequest(
-                  name: name,
-                  email: email,
-                  gender: gender,
-                  status: status,
-                );
-                context.read<UserBloc>().add(UpdateUserEvent(updateUserRequest: currentUser, id: widget.editUserArguments.id!.toInt()));
-              } else {
-                final newUser = InsertUserRequest(
-                  name: name,
-                  email: email,
-                  gender: gender,
-                  status: status,
-                );
-                context.read<UserBloc>().add(
-                  InsertUserEvent(insertUserRequest: newUser),
+              if (state is UpdateUserLoaded) {
+                Fluttertoast.showToast(
+                  msg: "Update successfully",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: AppColors.primaryWhiteColor,
+                  textColor: AppColors.primaryBlueColor,
                 );
               }
+
+              if (state is UpdateUserLoadingError) {
+                Fluttertoast.showToast(
+                  msg: state.errorMsg,
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: AppColors.primaryWhiteColor,
+                  textColor: AppColors.primaryRedColor,
+                );
+              }
+
             },
-          );
-        },
-      );
-              }
-              else if (state is NetworkFailure || state is NetworkInitial) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Lottie.asset(Assets.NO_INTERNET),
-                      Text(
-                        "You are not connected to the internet",
-                        style: GoogleFonts.openSans(
-                          color: AppColors.primaryBlueColor,
-                          fontSize: 20,
-                        ),
-                      ).animate().scale(delay: 200.ms, duration: 300.ms),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox();
-        },
-      ),
-        ),
-        body: BlocConsumer<UserBloc, UserState>(
-          listener: (context, state) {
-            if (state is InsertUserLoaded) {
-              Fluttertoast.showToast(
-                msg: "Inserted successfully",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: AppColors.primaryWhiteColor,
-                textColor: AppColors.primaryBlueColor,
-              );
-            }
-            if (state is InsertUserLoadingError) {
-              Fluttertoast.showToast(
-                msg: state.errorMsg,
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: AppColors.primaryWhiteColor,
-                textColor: AppColors.primaryRedColor,
-              );
-            }
-
-            if (state is UpdateUserLoaded) {
-              Fluttertoast.showToast(
-                msg: "Update successfully",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: AppColors.primaryWhiteColor,
-                textColor: AppColors.primaryBlueColor,
-              );
-            }
-
-            if (state is UpdateUserLoadingError) {
-              Fluttertoast.showToast(
-                msg: state.errorMsg,
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                backgroundColor: AppColors.primaryWhiteColor,
-                textColor: AppColors.primaryRedColor,
-              );
-            }
-
-          },
-          builder: (context, state) {
-            return CustomScrollView(
-              slivers: [
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: CustomSliverHeader(
-                    showAvatar: false,
-                    expandedHeight: 167,
-                    title: isEditMode ? 'Edit Details' : 'Add New User',
-                    subtitle:
-                    isEditMode ? 'Edit Details' : 'Enter user details',
-                    showBackButton: true,
-                    onBack: () => context.go('/homeScreen'),
-                    leadingIcon: isEditMode ? Icons.edit : Icons.person_add_alt_1,
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        top: 70.0, left: 16, right: 16, bottom: 20),
-                    child: Column(
-                      children: [
-                        _inputField("Name", nameController),
-                        _inputField("Email", emailController),
-                        _dropdownField("Gender", genderOptions, selectedGender,
-                                (val) {
-                              setState(() => selectedGender = val);
-                            }),
-                        _dropdownField("Status", statusOptions, selectedStatus,
-                                (val) {
-                              setState(() => selectedStatus = val);
-                            }),
-                      ],
+            builder: (context, state) {
+              return CustomScrollView(
+                slivers: [
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: CustomSliverHeader(
+                      showAvatar: false,
+                      expandedHeight: 167,
+                      title: isEditMode ? 'Edit Details' : 'Add New User',
+                      subtitle:
+                      isEditMode ? 'Edit Details' : 'Enter user details',
+                      showBackButton: true,
+                      onBack: () => context.go('/homeScreen'),
+                      leadingIcon: isEditMode ? Icons.edit : Icons.person_add_alt_1,
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          top: 70.0, left: 16, right: 16, bottom: 20),
+                      child: Column(
+                        children: [
+                          _inputField("Name", nameController),
+                          _inputField("Email", emailController),
+                          _dropdownField("Gender", genderOptions, selectedGender,
+                                  (val) {
+                                setState(() => selectedGender = val);
+                              }),
+                          _dropdownField("Status", statusOptions, selectedStatus,
+                                  (val) {
+                                setState(() => selectedStatus = val);
+                              }),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
